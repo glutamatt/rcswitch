@@ -1,12 +1,11 @@
 package rcswitch
 
 import (
-	"log"
 	"time"
 )
 
 // Scan scans for button presses from the remote
-func (r *RCSwitch) Scan() {
+func (r *RCSwitch) Scan(codes chan int) {
 	lastTime := time.Now()
 	changeCount := 0
 	repeatCount := 0
@@ -29,7 +28,7 @@ func (r *RCSwitch) Scan() {
 				if repeatCount == 2 {
 
 					for _, p := range protocols {
-						if processChange(changes, changeCount, p) {
+						if processChange(changes, changeCount, p, codes) {
 							// receive successfull
 							break
 						}
@@ -53,7 +52,7 @@ func (r *RCSwitch) Scan() {
 	}
 }
 
-func processChange(c []int64, changeCount int, p Protocol) bool {
+func processChange(c []int64, changeCount int, p Protocol, codes chan int) bool {
 	code := 0
 	syncLengthInPulses := getSyncLenghtInPulses(p)
 	delay := c[0] / syncLengthInPulses
@@ -79,11 +78,14 @@ func processChange(c []int64, changeCount int, p Protocol) bool {
 	}
 
 	if changeCount > 7 {
-		log.Printf("decimal: %d\n", code)
-		log.Printf("binary: %024b\n", code)
-		log.Printf("bitlength: %d", (changeCount-1)/2)
-		log.Printf("protocol: %d", p.ID)
-		log.Println("")
+		/*
+			log.Printf("decimal: %d\n", code)
+			log.Printf("binary: %024b\n", code)
+			log.Printf("bitlength: %d", (changeCount-1)/2)
+			log.Printf("protocol: %d", p.ID)
+			log.Println("")
+		*/
+		codes <- code
 		return true
 	}
 
