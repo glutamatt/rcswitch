@@ -1,11 +1,12 @@
 package rcswitch
 
 import (
+	"context"
 	"time"
 )
 
 // Scan scans for button presses from the remote
-func (r *RCSwitch) Scan(codes chan int) {
+func (r *RCSwitch) Scan(ctx context.Context, codes chan int) {
 	lastTime := time.Now()
 	changeCount := 0
 	repeatCount := 0
@@ -13,6 +14,11 @@ func (r *RCSwitch) Scan(codes chan int) {
 
 	// Wait for edges as detected by the hardware:
 	for r.pin.WaitForEdge(-1) {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 
 		dur := time.Now().Sub(lastTime).Nanoseconds() / 1000 // duration in microseconds
 
